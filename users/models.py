@@ -25,7 +25,7 @@ class User(AbstractUser, BaseModel):
 	                          default="media/users_photo/default.png", validators=[
 			FileExtensionValidator(allowed_extensions=["jpeg", "jpg", "png", "heic", "heif"])])
 	username = models.CharField(max_length=31, unique=True)
-	password = models.CharField(max_length=60)
+	password = models.CharField(max_length=255)
 	roles = models.CharField(choices=ROLES, default=ORDINARY)
 	email = models.EmailField(null=True, blank=True)
 	phone_number = models.CharField(max_length=13, null=True, blank=True)

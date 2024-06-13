@@ -30,6 +30,7 @@ INSTALLED_APPS = [
 
 	# locale
 	'users',
+	'uzmovi',
 ]
 
 MIDDLEWARE = [
@@ -67,13 +68,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
 	'default': {
-		'ENGINE': 'django.db.backends.postgresql_psycopg2',
+		'ENGINE': 'django.db.backends.postgresql',
 		'NAME': config('DB_NAME'),
 		'USER': config('DB_USER'),
 		'PASSWORD': config('DB_PASSWORD'),
 		'HOST': config('DB_HOST'),
 		'PORT': config('DB_PORT'),
 	}
+}
+
+REST_FRAMEWORK = {
+	'DEFAULT_AUTHENTICATION_CLASSES': [
+		'rest_framework.authentication.BasicAuthentication',
+	],
+	'DEFAULT_PERMISSION_CLASSES': [
+		'rest_framework.permissions.IsAuthenticated',
+	]
 }
 
 # Password validation

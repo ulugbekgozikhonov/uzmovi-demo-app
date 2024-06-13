@@ -10,16 +10,16 @@ class SignUpSerializer(serializers.ModelSerializer):
 	def __init__(self, *args, **kwargs):
 		super(SignUpSerializer, self).__init__(*args, **kwargs)
 		self.fields["email_or_phone_number"] = serializers.CharField(required=True)
+		self.fields['reset_password'] = serializers.CharField(max_length=65, required=True)
 
 	class Meta:
 		model = User
-		fields = (id, 'username', 'password', "auth_type")
+		fields = ("id", 'username', 'password', "auth_type")
 
 		extra_kwargs = {
 			"auth_type": {"required": False}
 		}
 
 	def validate(self, attrs):
-		email_or_phone_number = attrs.get("email_or_phone_number")
-
-
+		print("DATA", attrs)
+		return attrs
