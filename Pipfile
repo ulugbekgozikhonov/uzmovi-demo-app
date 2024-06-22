@@ -9,6 +9,8 @@ pillow = "*"
 djangorestframework = "*"
 python-decouple = "*"
 psycopg2 = "*"
+djangorestframework-simplejwt = "*"
+twilio = "*"
 
 [dev-packages]
 
