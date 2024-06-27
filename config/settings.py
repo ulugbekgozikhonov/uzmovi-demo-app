@@ -28,6 +28,7 @@ INSTALLED_APPS = [
 
 	# packages
 	'rest_framework',
+	'rest_framework_simplejwt',
 
 	# locale
 	'users',
@@ -49,7 +50,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
 	{
 		'BACKEND': 'django.template.backends.django.DjangoTemplates',
-		'DIRS': [],
+		'DIRS': [BASE_DIR / 'templates'],
 		'APP_DIRS': True,
 		'OPTIONS': {
 			'context_processors': [
@@ -178,3 +179,12 @@ MEDIA_ROOT = BASE_DIR / 'media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'flexbow.uz@gmail.com'
+EMAIL_HOST_PASSWORD = 'hjue aidz amqq kcsq'
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

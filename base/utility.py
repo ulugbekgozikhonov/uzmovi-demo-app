@@ -1,5 +1,8 @@
 import re
+import threading
 
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
 from decouple import config
 from twilio.rest import Client
@@ -27,8 +30,44 @@ def check_passwords(password, reset_password):
 	return password == reset_password
 
 
+class EmailThread(threading.Thread):
+	def __init__(self, email):
+		self.email = email
+		threading.Thread.__init__(self)
+
+	def run(self):
+		self.email.send()
+
+
+class Email:
+	@staticmethod
+	def send_email(data):
+		email = EmailMessage(
+			subject=data["subject"],
+			body=data["body"],
+			to=[data['to_email']],
+
+		)
+		if data.get("content_type") == "html":
+			email.content_subtype = "html"
+			EmailThread(email).start()
+
+
 def send_email(email, code):
-	pass
+	html_content = render_to_string(
+		'authentication/activate_account.html',
+		{"code": code}
+
+	)
+	Email.send_email(
+		{
+			"subject": "Royhatdan o'tish",
+			"to_email": email,
+			"body": html_content,
+			"content_type": "html"
+
+		}
+	)
 
 
 def send_phone(phone_number, code):
