@@ -6,12 +6,14 @@ from rest_framework.generics import CreateAPIView
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.models import User, DONE
-from users.serializers import SignUpSerializer
+from users.serializers import SignUpSerializer, LoginSerializer
 
 
-class SignUpView(CreateAPIView):
+class RegisterView(CreateAPIView):
 	queryset = User.objects.all()
 	serializer_class = SignUpSerializer
 	permission_classes = [permissions.AllowAny]
@@ -36,3 +38,10 @@ class VerifyAPIView(APIView):
 		raise ValidationError({
 			'message': 'your code invalid or time expired'
 		})
+
+
+class LoginAPIView(TokenObtainPairView):
+	serializer_class = LoginSerializer
+
+
+

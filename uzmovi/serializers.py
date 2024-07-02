@@ -8,13 +8,16 @@ class GenreSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Genre
-		fields = ["id", "title", ]
+		fields = ["id", "title"]
 
 
 class MovieSerializer(serializers.ModelSerializer):
 	id = serializers.UUIDField(read_only=True)
-	genre = GenreSerializer()
+	# genre = GenreSerializer()
 
 	class Meta:
 		model = Movie
 		fields = ["id", "title", "genre"]
+
+	# def save(self, **kwargs):
+	# 	pass

@@ -1,9 +1,15 @@
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
+from typing import Dict, Any
 
-from base.utility import check_passwords, check_email_or_phone_number, send_email, send_phone
-from users.models import User, VIA_EMAIL, VIA_PHONE
+from django.contrib.auth import authenticate
+from rest_framework import serializers
+from rest_framework.decorators import api_view
+from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.response import Response
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from base.utility import check_passwords, check_email_or_phone_number, send_email, send_phone, check_login_type
+from users.models import User, VIA_EMAIL, VIA_PHONE, DONE, NEW
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -11,9 +17,9 @@ class SignUpSerializer(serializers.ModelSerializer):
 	auth_type = serializers.CharField(required=False)
 
 	def __init__(self, *args, **kwargs):
+		super(SignUpSerializer, self).__init__(*args, **kwargs)
 		self.fields['email_or_phone_number'] = serializers.CharField(required=False)
 		self.fields['reset_password'] = serializers.CharField(required=False)
-		super(SignUpSerializer, self).__init__(*args, **kwargs)
 
 	class Meta:
 		model = User
@@ -90,3 +96,47 @@ class SignUpSerializer(serializers.ModelSerializer):
 		data = super(SignUpSerializer, self).to_representation(instance)
 		data.update(token=instance.tokens())
 		return data
+
+
+class LoginSerializer(TokenObtainPairSerializer):
+
+	def __init__(self, *args, **kwargs):
+		super(LoginSerializer, self).__init__(*args, **kwargs)
+		self.user = None
+		self.fields['userinput'] = serializers.CharField(required=True)
+		self.fields['username'] = serializers.CharField(required=False, read_only=True)
+
+	def validate(self, attrs: Dict[str, Any]) -> Dict[str, str]:
+		self.login_validate(attrs)
+		attrs = self.user.tokens()
+		return attrs
+
+	def login_validate(self, attrs):
+		user_input = attrs.get("userinput")
+
+		if check_login_type(user_input) == "username":
+			username = user_input
+		elif check_login_type(user_input) == "email":
+			user = User.objects.filter(email__iexact=user_input).first()
+			username = user.username
+		elif check_login_type(user_input) == "phone_number":
+			user = User.objects.filter(phone_number=user_input).first()
+			username = user.username
+		else:
+			data = {
+				"success": False,
+				"message": "You don't send phone number or email or username"
+			}
+			return ValidationError(data)
+
+		user = authenticate(username=username, password=attrs.get('password'))
+
+		if user is not None:
+			self.user = user
+		else:
+			raise ValidationError(
+				{
+					"success": False,
+					"message": "Login or password you entered is incorrect. Please check and try again"
+				}
+			)

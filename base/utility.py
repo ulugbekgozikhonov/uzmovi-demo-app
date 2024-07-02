@@ -11,6 +11,7 @@ from users.models import VIA_EMAIL, VIA_PHONE
 
 email_regex = re.compile(r'[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+')
 phone_regex = re.compile(r'^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$')
+username_regex = re.compile(r'^[a-z0-9_-]{3,15}$')
 
 
 def check_email_or_phone_number(email_or_phone_number):
@@ -24,6 +25,16 @@ def check_email_or_phone_number(email_or_phone_number):
 		"message": "Email or phone number is not valid"
 	}
 	raise ValidationError(data)
+
+
+def check_login_type(login_attempt):
+	if re.fullmatch(email_regex, login_attempt):
+		return 'email'
+	elif re.fullmatch(phone_regex, login_attempt):
+		return 'phone_number'
+	elif re.fullmatch(username_regex, login_attempt):
+		return 'username'
+	raise ValidationError({'success': False, "message": "Email or phone number or username isn't valid"})
 
 
 def check_passwords(password, reset_password):
