@@ -1,12 +1,14 @@
 from typing import Dict, Any
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from base.utility import check_passwords, check_email_or_phone_number, send_email, send_phone, check_login_type
 from users.models import User, VIA_EMAIL, VIA_PHONE, DONE, NEW
@@ -140,3 +142,51 @@ class LoginSerializer(TokenObtainPairSerializer):
 					"message": "Login or password you entered is incorrect. Please check and try again"
 				}
 			)
+
+
+class LoginRefreshSerializer(TokenRefreshSerializer):
+
+	def validate(self, attrs: Dict[str, Any]) -> Dict[str, str]:
+		data = super().validate(attrs)
+
+		access_token = AccessToken(data.get('access'))
+		user_id = access_token.get('user_id')
+		user = get_object_or_404(User, id=user_id)
+
+		update_last_login(None, user)
+
+		return data
+
+
+class PasswordUpdateSerializer(serializers.Serializer):
+	password = serializers.CharField(max_length=255, write_only=True, required=True)
+	new_password = serializers.CharField(max_length=255, write_only=True, required=True)
+	confirm_password = serializers.CharField(max_length=255, write_only=True, required=True)
+
+	class Meta:
+		fields = ['password', 'new_password', 'confirm_password']
+
+	def validate(self, attrs):
+		user = self.context['request'].user
+		password = attrs.get('password')
+		new_password = attrs.get('new_password')
+		confirm_password = attrs.get('confirm_password')
+
+		if not user.check_password(password):
+			raise ValidationError({
+				'message': 'Current password is incorrect.',
+				'status': 400
+			})
+
+		if new_password != confirm_password:
+			raise ValidationError({
+				'message': 'New passwords do not match.',
+				'status': 400
+			})
+
+		return attrs
+
+	def update(self, instance, validated_data):
+		instance.set_password(validated_data['new_password'])
+		instance.save()
+		return instance
