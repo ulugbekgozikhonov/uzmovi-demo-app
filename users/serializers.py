@@ -1,5 +1,5 @@
 from typing import Dict, Any
-
+from django.db.models import Q
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
@@ -190,3 +190,25 @@ class PasswordUpdateSerializer(serializers.Serializer):
 		instance.set_password(validated_data['new_password'])
 		instance.save()
 		return instance
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+	check_email_or_phone_number = serializers.CharField(write_only=True, required=True)
+
+	def validate(self, attrs):
+		check_email_or_phone_number = attrs.get("check_email_or_phone_number", None)
+		if check_email_or_phone_number is None:
+			raise ValidationError({
+				"success": False,
+				"message": "Email or phone number must be entered"
+			})
+		user = User.objects.filter(Q(phone_number=check_email_or_phone_number) | Q(email=check_email_or_phone_number))
+		if not user.exists():
+			raise ValidationError(
+				{
+					'success': False,
+					"message": "Email or phone number is invalid"
+				}
+			)
+		attrs['user'] = user.first()
+		return attrs

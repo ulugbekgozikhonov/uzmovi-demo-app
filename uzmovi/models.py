@@ -8,6 +8,9 @@ from base.models import BaseModel
 class Genre(BaseModel):
 	title = models.CharField(65)
 
+	def __str__(self):
+		return self.title
+
 
 class Movie(BaseModel):
 	title = models.CharField(max_length=60)
